@@ -1,0 +1,26 @@
+---
+title: "Data analysis and model fitting for PSOMER data"
+output: html_notebook
+---
+
+
+```{r}
+# Load necessary libraries
+library(tidyverse)
+```
+
+## Load in clean dataset
+```{r}
+data <- read_csv("psomer_data_clean.csv")
+```
+
+
+## Data exploration figures
+
+## Model fitting
+```{r}
+
+```
+
+
+

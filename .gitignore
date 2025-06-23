@@ -3,4 +3,7 @@
 
 # But not these...
 !.gitignore
+!*/
 !*.Rmd
+!*.md
+.Rproj.user
