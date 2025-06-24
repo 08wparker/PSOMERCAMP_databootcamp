@@ -3,24 +3,68 @@ title: "Data analysis and model fitting for PSOMER data"
 output: html_notebook
 ---
 
-
 ```{r}
-# Load necessary libraries
+# for data manipulation and visualization
 library(tidyverse)
+
+# for flexible paths and reproducible research
+library(here)
 ```
 
-## Load in clean dataset
+## Load in dataset
+
 ```{r}
-data <- read_csv("psomer_data_clean.csv")
+data <- read_csv(here("data", "final_cohort.csv"))
 ```
 
+## Data exploration
+
+```{r}
+data
+```
 
 ## Data exploration figures
 
 ## Model fitting
+
 ```{r}
+data %>%
+  #break age into quintiles
+  mutate(age_decile = cut(age, 10)) %>%
+  group_by(age_decile) %>%
+  summarise(outcome_rate = mean(outcome)) %>% 
+  ggplot(aes(x= age_decile, y = outcome_rate)) + geom_point()
 
 ```
 
+## Hypothesis
 
+**Age is an independent risk factor for myocardial infarction.**
 
+## Statistical model
+
+$$log(\frac{P(Y =1)}{(1- P(Y=1)}) = \beta_0 + \beta_1*age + \beta_2*diabetes$$
+
+### Null hypothesis
+
+**There is NO association between age and myocardial infarction**
+
+$$\beta_1 = 0$$
+
+```{r}
+glm(outcome ~ age + diabetes, data = data, family = "binomial") %>% summary()
+```
+
+The coefficient for age is significant at p \< 0.05, indicating we can *reject* the null hypothesis in favor of the alternative hypothesis
+
+# Interpretation of effect size using inline r code
+```{r}
+age_coefficient <- glm(outcome ~ age + diabetes, data = data, family = "binomial") %>% 
+  summary() %>% 
+  .$coefficients %>% 
+  .[2,1]
+
+exp(age_coefficient)
+```
+
+The odds ratio for age is `r round(exp(age_coefficient), digits =2)`, indicating that for each additional year of age, the odds of having a myocardial infarction increase by `r round(100*(exp(age_coefficient)-1))`%.

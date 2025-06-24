@@ -41,12 +41,12 @@ Load in your dataset for your project. For this example, I am simulating a data 
 # uncomment the line below
 # data <- read_csv(here("data", "datafile.csv"))
 
-## simulate a dataset. There are 1500 patients. The outcome is binary, and there are 5 covariates (age, creatine, diabetes, BMI, and smoking status)
+## simulate a dataset. There are 1500 patients. The outcome is binary, and there are 5 covariates (age, creatinine, diabetes, BMI, and smoking status)
 set.seed(123)
 data <- tibble(
   patient_id = 1:1500,
   age = rnorm(1500, mean = 50, sd = 10),
-  creatine = rnorm(1500, mean = 1.0, sd = 0.2),
+  creatinine = rnorm(1500, mean = 1.0, sd = 0.2),
   diabetes = sample(c(0, 1), 1500, replace = TRUE),
   BMI = rnorm(1500, mean = 25, sd = 5),
   smoking_status = sample(c("non-smoker", "smoker"), 1500, replace = TRUE)
@@ -54,7 +54,7 @@ data <- tibble(
 
 # create a noisy binary outcome variable
 data <- data %>%
-  mutate(risk = age + creatine + diabetes * 2 + BMI - ifelse(smoking_status == "smoker", 1, 0),
+  mutate(risk = age + creatinine + diabetes * 2 + BMI - ifelse(smoking_status == "smoker", 1, 0),
          # add some noise to the risk score
          risk = risk + rnorm(1500, mean = 0, sd = 5),
          # create a binary outcome based on the risk score
@@ -67,19 +67,19 @@ data %>%
 ### Select only the relevant variables for your study
 ```{r}
 data <- data %>% 
-  select(patient_id, age, creatine, diabetes, BMI, smoking_status, outcome)
+  select(patient_id, age, creatinine, diabetes, BMI, smoking_status, outcome)
 
 data
 ```
 
 ### Define inclusion criteria and filter the dataset accordingly
-Filter the dataset to include only patients who meet the inclusion criteria. For this example, let's say we want to include patients aged 30-70, with a creatine level between 0.5 and 1.5.
+Filter the dataset to include only patients who meet the inclusion criteria. For this example, let's say we want to include patients aged 30-70, with a creatinine level between 0.5 and 1.5.
 
 Track of the patients you exclude for your STROBE diagram
 ```{r}
 # Define inclusion criteria
 data <- data %>%
-  mutate(inclusion = ifelse(age >= 30 & age <= 70 & creatine >= 0.5 & creatine <= 1.5, TRUE, FALSE)) 
+  mutate(inclusion = ifelse(age >= 30 & age <= 70 & creatinine >= 0.5 & creatinine <= 1.5, TRUE, FALSE)) 
 
 data %>%
   count(inclusion)
@@ -89,7 +89,7 @@ data %>%
 ```{r}
 excluded_patients <- data %>%
   filter(inclusion == FALSE) %>%
-  select(patient_id, age, creatine, diabetes, BMI, smoking_status, outcome)
+  select(patient_id, age, creatinine, diabetes, BMI, smoking_status, outcome)
 ```
 
 
@@ -111,14 +111,14 @@ n_excl_age_high <- nrow(excl_age_high)
 data <- data %>% filter(age <= 70)
 
 # Exclusion: Creatinine < 0.5
-excl_cr_low <- data %>% filter(creatine < 0.5)
+excl_cr_low <- data %>% filter(creatinine < 0.5)
 n_excl_cr_low <- nrow(excl_cr_low)
-data <- data %>% filter(creatine >= 0.5)
+data <- data %>% filter(creatinine >= 0.5)
 
 # Exclusion: Creatinine > 1.5
-excl_cr_high <- data %>% filter(creatine > 1.5)
+excl_cr_high <- data %>% filter(creatinine > 1.5)
 n_excl_cr_high <- nrow(excl_cr_high)
-data <- data %>% filter(creatine <= 1.5)
+data <- data %>% filter(creatinine <= 1.5)
 
 # Final cohort
 final_n <- nrow(data)
@@ -166,7 +166,7 @@ rsvg_pdf(charToRaw(svg), here("results", "strobe_diagram.pdf"))
 # Create a table one
 ```{r}
 # Create a table one for the final cohort
-table_one <- CreateTableOne(vars = c("age", "creatine", "diabetes", "BMI", "smoking_status", "outcome"),
+table_one <- CreateTableOne(vars = c("age", "creatinine", "diabetes", "BMI", "smoking_status", "outcome"),
                              data = data,
                              factorVars = c("diabetes", "smoking_status", "outcome"))
 
