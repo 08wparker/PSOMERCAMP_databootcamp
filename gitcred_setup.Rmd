@@ -8,7 +8,11 @@ date: "2025-06-27"
 install.packages("gitcreds")
 ```
 
-# enter your personal access token
+# generate a personal access token from github
+
+https://github.com/settings/tokens
+
+# set the personal access token in R
 ```{r}
 library(gitcreds)
 
