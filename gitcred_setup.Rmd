@@ -1,0 +1,16 @@
+---
+title: "gitcreds_setup"
+output: html_document
+date: "2025-06-27"
+---
+
+```{r}
+install.packages("gitcreds")
+```
+
+# enter your personal access token
+```{r}
+library(gitcreds)
+
+gitcreds_set()
+```
