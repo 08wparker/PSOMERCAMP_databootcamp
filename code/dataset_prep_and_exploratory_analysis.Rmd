@@ -76,6 +76,15 @@ heart_data
 ## Descriptive statistics
 ```{r}
 
+heart_data %>%
+  ggplot(aes(x = age)) +
+  geom_density(fill = "blue", alpha = 0.5)
+```
+```{r}
+heart_data %>%
+  group_by(any_heart_disease) %>%
+  ggplot(aes(x = age, fill = factor(any_heart_disease))) +
+  geom_density(alpha = 0.5)
 ```
 
 
@@ -84,7 +93,6 @@ Track of the patients you exclude for your STROBE diagram
 ```{r}
 
 ```
-
 
 
 ### Exclude patients who do not meet the inclusion criteria and save them in dataset
@@ -99,7 +107,7 @@ excluded_patients <- data %>%
 
 ```{r}
 # Create a table one for the final cohort
-table_one <- CreateTableOne()
+table_one <- CreateTableOne(data = heart_data)
 
 table_one
 ```
