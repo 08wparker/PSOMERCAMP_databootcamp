@@ -1,0 +1,46 @@
+---
+title: "STROBE diagram"
+output: html_notebook
+---
+
+```{r}
+# for data manipulation and visualization
+library(tidyverse)
+
+# to help set the working directory and make this script reproducible across different machines
+library(here)
+
+# for the strobe diagram
+library(DiagrammeR)
+library(DiagrammeRsvg) 
+library(glue)
+library(rsvg)
+
+# for Table one
+library(tableone) 
+```
+
+
+### Define inclusion criteria and filter the dataset accordingly
+Track of the patients you exclude for your STROBE diagram
+```{r}
+
+```
+
+
+### Exclude patients who do not meet the inclusion criteria and save them in dataset
+
+```{r}
+excluded_patients <- data %>%
+  filter(inclusion == FALSE)
+```
+
+
+```{r}
+#export to results
+# Convert to data frame
+table_df <- as.data.frame(print(table_one, quote = FALSE, noSpaces = TRUE))
+
+# Write CSV
+write.csv(table_df, file = here("results", "table_one.csv"), row.names = TRUE)
+```

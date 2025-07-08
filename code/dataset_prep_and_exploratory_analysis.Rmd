@@ -13,12 +13,6 @@ library(tidyverse)
 # to help set the working directory and make this script reproducible across different machines
 library(here)
 
-# for the strobe diagram
-library(DiagrammeR)
-library(DiagrammeRsvg) 
-library(glue)
-library(rsvg)
-
 # for Table one
 library(tableone) 
 ```
@@ -189,6 +183,11 @@ heart_data %>%
        y = "Cholesterol")
 ```
 
+```{r}
+heart_data %>%
+  mutate(any_heart_disease = factor(any_heart_disease, levels = c(0, 1), labels = c("No", "Yes"))) %>%
+  ggplot(aes(x= age, y = thalach, color = factor(any_heart_disease))) + geom_point() + labs(x = "age", y = "maximum heart rate", color = "heart disease")
+```
 
 
 ### adujsted logistic regression model controlling for cholesterol
@@ -202,70 +201,8 @@ summary(logistic_model_adjusted)
 ```
 
 
-### Define inclusion criteria and filter the dataset accordingly
-Track of the patients you exclude for your STROBE diagram
-```{r}
-
-```
 
 
-### Exclude patients who do not meet the inclusion criteria and save them in dataset
-
-```{r}
-excluded_patients <- data %>%
-  filter(inclusion == FALSE)
-```
-
-
-
-
-```{r}
-#export to results
-# Convert to data frame
-table_df <- as.data.frame(print(table_one, quote = FALSE, noSpaces = TRUE))
-
-# Write CSV
-write.csv(table_df, file = here("results", "table_one.csv"), row.names = TRUE)
-```
-
-### Make a strobe flow diagram with the exclusion reasons
-
-Use generative AI for this! Do NOT code it by hand
-
-```{r}
-
-```
-
-```{r}
-strobe_diagram <- grViz(glue("
-digraph flowchart {{
-  rankdir = TB;
-  node [shape = box, style = filled, fontname = Helvetica]
-  edge [fontname = Helvetica]
-
-  A [label = 'Initial cohort\\n(n = {total_n})', fillcolor = lightgray]
-    B [label = 'Excluded (n = {n_excluded})\\n{n_excl_age_low} Age < 30\\n{n_excl_age_high} Age > 70\\n{n_excl_cr_low} Creatinine < 0.5\\n{n_excl_cr_high} Creatinine > 1.5', fillcolor = lightblue]
-  C [label = 'Final cohort\\n(n = {final_n})', fillcolor = lightgray]
-  X [label = '', width=0, height=0, shape=point, style=invis]
-
-  A -> X [arrowhead=none]
-  X -> B
-  X -> C 
-
-  {{ rank = same; B; X }}
-}}
-"))
-
-strobe_diagram
-```
-
-```{r}
-#convert the DiagrammeR object to SVG
-svg <- export_svg(strobe_diagram)
-
-# Convert SVG to PDF and save it
-rsvg_pdf(charToRaw(svg), here("results", "strobe_diagram.pdf"))
-```
 
 
 
