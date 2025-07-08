@@ -47,6 +47,8 @@ column_names <- c(
 
 heart_data <- heart_data %>%
   setNames(column_names)
+
+write_csv(heart_data, here("data", "heart_data.csv"))
 ```
 
 ## Primary outcome

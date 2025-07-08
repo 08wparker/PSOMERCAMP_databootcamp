@@ -1,0 +1,22 @@
+---
+title: "PROJECT Title exporatory data analysis"
+output: html_notebook
+---
+
+# Load packages
+```{r}
+library(tidyverse)
+library(here)
+```
+
+# load in the data
+```{r}
+data <- read_csv(here("data", "heart_data.csv"))
+```
+
+# rename a column with a suboptimal name
+```{r}
+data %>%
+  rename(chol = `cholesterol (mg/dl)`)
+```
+
