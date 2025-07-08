@@ -73,18 +73,132 @@ This section won't go in your methods, but is essential to understand your datas
 heart_data
 ```
 
-## Descriptive statistics
+# Create a table one
 ```{r}
+# Create a table one for the final cohort
+table_one <- CreateTableOne(data = heart_data)
 
+table_one
+```
+
+
+
+## Exploratory data analysis
+
+Visualize distribution of age in the dataset
+```{r}
 heart_data %>%
   ggplot(aes(x = age)) +
   geom_density(fill = "blue", alpha = 0.5)
 ```
+
+## calculate the mean, median, and mode of age
+
+```{r}
+mean_age <- mean(heart_data$age, na.rm = TRUE)
+median_age <- median(heart_data$age, na.rm = TRUE)
+mode_age <- as.numeric(names(sort(table(heart_data$age), decreasing = TRUE)[1]))
+```
+
+```{r}
+mean_age
+```
+```{r}
+median_age
+```
+
+```{r}
+mode_age
+```
+
+```{r}
+heart_data %>%
+  ggplot(aes(x = age)) +
+  geom_histogram(binwidth = 1,
+                 fill = "blue", color = "black", alpha = 0.5)
+```
+
+
 ```{r}
 heart_data %>%
   group_by(any_heart_disease) %>%
   ggplot(aes(x = age, fill = factor(any_heart_disease))) +
   geom_density(alpha = 0.5)
+```
+
+
+## test the hypothesis that patients with heart disease are older on average
+
+specifically test that the mean age is higher in patients with heart disease compared to those without
+
+
+```{r}
+mean_age_heart_disease <- heart_data %>%
+  filter(any_heart_disease == 1) %>%
+  summarise(mean_age = mean(age, na.rm = TRUE))
+
+mean_age_heart_disease
+```
+### mean age of patients without heart disease
+```{r}
+mean_age_no_heart_disease <- heart_data %>%
+  filter(any_heart_disease == 0) %>%
+  summarise(mean_age = mean(age, na.rm = TRUE))
+
+mean_age_no_heart_disease
+```
+### null hypothesis
+
+the mean age is the same in patients with and without heart disease
+
+mean_age_heart_disease == mean_age_no_heart_disease
+
+### formula for a t-test in latex
+
+$$t = \frac{\bar{X}_1 - \bar{X}_2}{s_p \sqrt{\frac{1}{n_1} + \frac{1}{n_2}}}$$
+
+
+$$s_p = \sqrt{\frac{(n_1 - 1)s_1^2 + (n_2 - 1)s_2^2}{n_1 + n_2 - 2}}$$
+
+```{r}
+t_test_result <- t.test(age ~ any_heart_disease, data = heart_data)
+
+t_test_result
+```
+## Unadjusted association of age with heart disease
+
+```{r}
+# Create a logistic regression model to assess the association of age with heart disease
+logistic_model <- glm(any_heart_disease ~ age, data = heart_data, family = binomial)
+```
+
+```{r}
+summary(logistic_model)
+```
+```{r}
+exp(0.05199)
+```
+
+## scatterplot of age vs cholesterol
+```{r}
+heart_data %>%
+  ggplot(aes(x = age, y = chol)) +
+  geom_point() +
+  labs(title = "Scatterplot of Age vs Cholesterol",
+       x = "Age",
+       y = "Cholesterol")
+```
+
+
+
+### adujsted logistic regression model controlling for cholesterol
+```{r}
+logistic_model_adjusted <- glm(any_heart_disease ~ age + chol, 
+                               data = heart_data, family = binomial)
+```
+
+```{r}
+summary(logistic_model_adjusted)
 ```
 
 
@@ -103,14 +217,7 @@ excluded_patients <- data %>%
 ```
 
 
-# Create a table one
 
-```{r}
-# Create a table one for the final cohort
-table_one <- CreateTableOne(data = heart_data)
-
-table_one
-```
 
 ```{r}
 #export to results
