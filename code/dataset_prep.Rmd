@@ -24,10 +24,10 @@ library(tableone)
 ```
 
 ## check the working directory- this should be the filepath to your project folder
+
 ```{r}
 here::here()
 ```
-
 
 # Methods
 
@@ -36,96 +36,58 @@ here::here()
 This study identifies all....
 
 ### Load in dataset
-Load in your dataset for your project. For this example, I am simulating a data set
-```{r}
-# uncomment the line below
-# data <- read_csv(here("data", "datafile.csv"))
 
-## simulate a dataset. There are 1500 patients. The outcome is binary, and there are 5 covariates (age, creatinine, diabetes, BMI, and smoking status)
-set.seed(123)
-data <- tibble(
-  patient_id = 1:1500,
-  age = rnorm(1500, mean = 50, sd = 10),
-  creatinine = rnorm(1500, mean = 1.0, sd = 0.2),
-  diabetes = sample(c(0, 1), 1500, replace = TRUE),
-  BMI = rnorm(1500, mean = 25, sd = 5),
-  smoking_status = sample(c("non-smoker", "smoker"), 1500, replace = TRUE)
+Load in your dataset for your project. For this example, I am using an example dataset from: 
+
+https://archive.ics.uci.edu/dataset/45/heart+disease
+
+```{r}
+# you are unlikely to need col_names = FALSE
+heart_data <- read_csv(here("data", "processed.cleveland.data"), col_names = FALSE)
+
+# here I am labeling the columns- you might need to do this!
+column_names <- c(
+  "age", "sex", "cp", "trestbps", "chol", "fbs", "restecg",
+  "thalach", "exang", "oldpeak", "slope", "ca", "thal", "num"
 )
 
-# create a noisy binary outcome variable
-data <- data %>%
-  mutate(risk = age + creatinine + diabetes * 2 + BMI - ifelse(smoking_status == "smoker", 1, 0),
-         # add some noise to the risk score
-         risk = risk + rnorm(1500, mean = 0, sd = 5),
-         # create a binary outcome based on the risk score
-         outcome = ifelse(risk > quantile(risk, 0.48), 1, 0))
-
-data %>%
-  count(outcome)
+heart_data <- heart_data %>%
+  setNames(column_names)
 ```
 
-### Select only the relevant variables for your study
+## Primary outcome
+
+The primary outcome of this study is...
 ```{r}
-data <- data %>% 
-  select(patient_id, age, creatinine, diabetes, BMI, smoking_status, outcome)
-
-data
+# construct binary primary outcome of any_heart_disease from num > 0
+heart_data <- heart_data %>%
+  mutate(any_heart_disease = ifelse(num > 0, 1, 0))
 ```
+
+# Exploratory data analysis
+
 
 ### Define inclusion criteria and filter the dataset accordingly
-Filter the dataset to include only patients who meet the inclusion criteria. For this example, let's say we want to include patients aged 30-70, with a creatinine level between 0.5 and 1.5.
-
 Track of the patients you exclude for your STROBE diagram
 ```{r}
-# Define inclusion criteria
-data <- data %>%
-  mutate(inclusion = ifelse(age >= 30 & age <= 70 & creatinine >= 0.5 & creatinine <= 1.5, TRUE, FALSE)) 
 
-data %>%
-  count(inclusion)
 ```
+
+
 
 ### Exclude patients who do not meet the inclusion criteria and save them in dataset
+
 ```{r}
 excluded_patients <- data %>%
-  filter(inclusion == FALSE) %>%
-  select(patient_id, age, creatinine, diabetes, BMI, smoking_status, outcome)
+  filter(inclusion == FALSE)
 ```
-
 
 ### Make a strobe flow diagram with the exclusion reasons
 
 Use generative AI for this! Do NOT code it by hand
+
 ```{r}
-# Starting cohort
-total_n <- nrow(data)
 
-# Exclusion: Age < 30
-excl_age_low <- data %>% filter(age < 30)
-n_excl_age_low <- nrow(excl_age_low)
-data <- data %>% filter(age >= 30)
-
-# Exclusion: Age > 70
-excl_age_high <- data %>% filter(age > 70)
-n_excl_age_high <- nrow(excl_age_high)
-data <- data %>% filter(age <= 70)
-
-# Exclusion: Creatinine < 0.5
-excl_cr_low <- data %>% filter(creatinine < 0.5)
-n_excl_cr_low <- nrow(excl_cr_low)
-data <- data %>% filter(creatinine >= 0.5)
-
-# Exclusion: Creatinine > 1.5
-excl_cr_high <- data %>% filter(creatinine > 1.5)
-n_excl_cr_high <- nrow(excl_cr_high)
-data <- data %>% filter(creatinine <= 1.5)
-
-# Final cohort
-final_n <- nrow(data)
-n_excluded <- total_n - final_n
-
-#save final cohort
-write_csv(data, here("data", "final_cohort.csv"))
 ```
 
 ```{r}
@@ -151,7 +113,6 @@ digraph flowchart {{
 strobe_diagram
 ```
 
-
 ```{r}
 #convert the DiagrammeR object to SVG
 svg <- export_svg(strobe_diagram)
@@ -160,10 +121,8 @@ svg <- export_svg(strobe_diagram)
 rsvg_pdf(charToRaw(svg), here("results", "strobe_diagram.pdf"))
 ```
 
-
-
-
 # Create a table one
+
 ```{r}
 # Create a table one for the final cohort
 table_one <- CreateTableOne(vars = c("age", "creatinine", "diabetes", "BMI", "smoking_status", "outcome"),
@@ -174,6 +133,7 @@ table_one
 
 
 ```
+
 ```{r}
 #export to results
 # Convert to data frame
@@ -182,4 +142,7 @@ table_df <- as.data.frame(print(table_one, quote = FALSE, noSpaces = TRUE))
 # Write CSV
 write.csv(table_df, file = here("results", "table_one.csv"), row.names = TRUE)
 ```
+
+
+
 
