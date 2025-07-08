@@ -7,3 +7,5 @@
 !*.Rmd
 !*.md
 .Rproj.user
+!heart_disease_variable_descriptions.csv
+!processed.cleveland.data

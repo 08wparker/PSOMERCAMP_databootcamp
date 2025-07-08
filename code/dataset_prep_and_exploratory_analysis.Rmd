@@ -57,7 +57,7 @@ heart_data <- heart_data %>%
 
 ## Primary outcome
 
-The primary outcome of this study is...
+The primary outcome of this study is the diagnosis of "any heart disease", defined as....
 ```{r}
 # construct binary primary outcome of any_heart_disease from num > 0
 heart_data <- heart_data %>%
@@ -65,6 +65,18 @@ heart_data <- heart_data %>%
 ```
 
 # Exploratory data analysis
+
+This section won't go in your methods, but is essential to understand your dataset
+
+### view your dataset
+```{r}
+heart_data
+```
+
+## Descriptive statistics
+```{r}
+
+```
 
 
 ### Define inclusion criteria and filter the dataset accordingly
@@ -80,6 +92,25 @@ Track of the patients you exclude for your STROBE diagram
 ```{r}
 excluded_patients <- data %>%
   filter(inclusion == FALSE)
+```
+
+
+# Create a table one
+
+```{r}
+# Create a table one for the final cohort
+table_one <- CreateTableOne()
+
+table_one
+```
+
+```{r}
+#export to results
+# Convert to data frame
+table_df <- as.data.frame(print(table_one, quote = FALSE, noSpaces = TRUE))
+
+# Write CSV
+write.csv(table_df, file = here("results", "table_one.csv"), row.names = TRUE)
 ```
 
 ### Make a strobe flow diagram with the exclusion reasons
@@ -120,29 +151,6 @@ svg <- export_svg(strobe_diagram)
 # Convert SVG to PDF and save it
 rsvg_pdf(charToRaw(svg), here("results", "strobe_diagram.pdf"))
 ```
-
-# Create a table one
-
-```{r}
-# Create a table one for the final cohort
-table_one <- CreateTableOne(vars = c("age", "creatinine", "diabetes", "BMI", "smoking_status", "outcome"),
-                             data = data,
-                             factorVars = c("diabetes", "smoking_status", "outcome"))
-
-table_one
-
-
-```
-
-```{r}
-#export to results
-# Convert to data frame
-table_df <- as.data.frame(print(table_one, quote = FALSE, noSpaces = TRUE))
-
-# Write CSV
-write.csv(table_df, file = here("results", "table_one.csv"), row.names = TRUE)
-```
-
 
 
 
