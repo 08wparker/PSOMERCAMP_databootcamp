@@ -1,6 +1,6 @@
 ---
 title: "STROBE diagram"
-output: html_notebook
+output: pdf_document
 ---
 
 ```{r}
@@ -21,26 +21,95 @@ library(tableone)
 ```
 
 
+### Load and examine the data
+```{r}
+# Load the heart disease dataset
+data <- read.csv(here("data", "heart_data.csv"))
+
+# Check data structure
+str(data)
+cat("Total patients in dataset:", nrow(data), "\n")
+cat("Age range:", min(data$age, na.rm = TRUE), "to", max(data$age, na.rm = TRUE), "\n")
+```
+
 ### Define inclusion criteria and filter the dataset accordingly
 Track of the patients you exclude for your STROBE diagram
 ```{r}
+# Define inclusion criteria: age between 40 and 70
+data$inclusion <- data$age >= 40 & data$age <= 70
 
+# Count excluded patients
+excluded_count <- sum(!data$inclusion, na.rm = TRUE)
+included_count <- sum(data$inclusion, na.rm = TRUE)
+
+cat("Patients excluded (age < 40 or > 70):", excluded_count, "\n")
+cat("Patients included (age 40-70):", included_count, "\n")
+
+# Create filtered dataset
+filtered_data <- data %>%
+  filter(inclusion == TRUE)
 ```
 
 
 ### Exclude patients who do not meet the inclusion criteria and save them in dataset
 
 ```{r}
+# Create excluded patients dataset
 excluded_patients <- data %>%
   filter(inclusion == FALSE)
+
+# Create table one for included patients
+table_one <- CreateTableOne(data = filtered_data, 
+                           vars = c("age", "sex", "cp", "trestbps", "chol", "fbs", "restecg", "thalach", "exang", "oldpeak", "slope", "ca", "thal", "num"))
+
+print(table_one)
+```
+
+### Create STROBE diagram
+```{r}
+# Create STROBE diagram using glue for string interpolation
+strobe_diagram <- DiagrammeR::grViz(glue("
+  digraph STROBE {{
+    graph [layout = dot, rankdir = TB]
+    
+    # Define node styles
+    node [shape = box, style = filled, fillcolor = white, fontname = Arial]
+    
+    # Define nodes
+    A [label = 'Total patients assessed\nfor eligibility\n(n = {nrow(data)})']
+    B [shape = point, style = invisible, width = 0, height = 0]
+    C [label = 'Patients excluded\n(age < 40 or > 70)\n(n = {excluded_count})', fillcolor = lightcoral]
+    D [label = 'Patients included\nin analysis\n(age 40-70)\n(n = {included_count})', fillcolor = lightblue]
+    
+    # Define same rank for B and C to position them horizontally
+    {{rank = same; B; C}}
+    
+    # Define edges
+    A -> B [arrowhead = none] 
+    B -> C 
+    B -> D 
+  }}
+"))
+
+# Display the diagram
+strobe_diagram
+```
+
+
+### Export diagram as PDF
+```{r}
+# Export STROBE diagram as PDF
+diagram_svg <- DiagrammeRsvg::export_svg(strobe_diagram)
+rsvg::rsvg_pdf(charToRaw(diagram_svg), here("results", "strobe_diagram.pdf"))
+
+cat("STROBE diagram saved as PDF to results/strobe_diagram.pdf\n")
 ```
 
 
 ```{r}
-#export to results
-# Convert to data frame
+# Export table one to results
 table_df <- as.data.frame(print(table_one, quote = FALSE, noSpaces = TRUE))
-
-# Write CSV
 write.csv(table_df, file = here("results", "table_one.csv"), row.names = TRUE)
+
+cat("Table one saved to results/table_one.csv\n")
 ```

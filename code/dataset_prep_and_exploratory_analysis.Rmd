@@ -4,6 +4,11 @@ output: html_notebook
 ---
 
 # Libraries
+This is a template for a project in PSOMER CAMP. It is designed to help you prepare your dataset and conduct exploratory data analysis (EDA) before diving into more complex analyses.
+
+This template uses R Markdown, which allows you to write code and documentation in the same file. You can run the code chunks to see the results and visualize your data.
+
+
 
 It's important you know what each package is doing
 ```{r}
@@ -27,7 +32,8 @@ here::here()
 
 ## Study population and inclusion criteria
 
-This study identifies all....
+
+
 
 ### Load in dataset
 
@@ -48,6 +54,10 @@ column_names <- c(
 heart_data <- heart_data %>%
   setNames(column_names)
 
+# Inclusion criteria: age 40-70
+heart_data <- heart_data %>%
+  filter(age >= 40 & age <= 70)
+
 write_csv(heart_data, here("data", "heart_data.csv"))
 ```
 
@@ -66,7 +76,9 @@ This section won't go in your methods, but is essential to understand your datas
 
 ### view your dataset
 ```{r}
-heart_data
+heart_data %>%
+  ggplot(aes(x = age, fill = factor(any_heart_disease))) +
+  geom_histogram(binwidth = 1, position = "dodge") 
 ```
 
 # Create a table one
