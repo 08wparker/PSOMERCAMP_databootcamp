@@ -12,7 +12,7 @@ library(here)
 # Load Data
 ```{r}
 # Load the pre-processed heart disease dataset
-heart_data <- read_csv(here("data", "heart_data.csv"))
+heart_data <- read_csv("/Users/williamparker/Desktop/patient_data/heart_data.csv")
 ```
 
 # Create Outcome Variable

@@ -7,6 +7,19 @@ output: html_notebook
 This is a template for a project in PSOMER CAMP. It is designed to help you prepare your dataset and conduct exploratory data analysis (EDA) before diving into more complex analyses.
 
 This template uses R Markdown, which allows you to write code and documentation in the same file. You can run the code chunks to see the results and visualize your data.
+\
+
+# Libraries
+Make sure you have the necessary packages installed. You can install them using `install.packages("package_name")` if you haven't already.
+
+```{r}
+# Load the necessary libraries
+# You may need to install these packages first using install.packages("package_name")
+# Load the tidyverse for data manipulation and visualization
+# Load the here package to help set the working directory
+
+```
+
 
 
 
@@ -43,7 +56,7 @@ https://archive.ics.uci.edu/dataset/45/heart+disease
 
 ```{r}
 # you are unlikely to need col_names = FALSE
-heart_data <- read_csv(here("data", "processed.cleveland.data"), col_names = FALSE)
+heart_data <- read_csv("/Users/williamparker/Desktop/patient_data/processed.cleveland.data", col_names = FALSE)
 
 # here I am labeling the columns- you might need to do this!
 column_names <- c(
@@ -58,7 +71,7 @@ heart_data <- heart_data %>%
 heart_data <- heart_data %>%
   filter(age >= 40 & age <= 70)
 
-write_csv(heart_data, here("data", "heart_data.csv"))
+write_csv(heart_data, "/Users/williamparker/Desktop/patient_data/heart_data.csv")
 ```
 
 ## Primary outcome
@@ -73,6 +86,19 @@ heart_data <- heart_data %>%
 # Exploratory data analysis
 
 This section won't go in your methods, but is essential to understand your dataset
+
+## Histogram of age stratified by heart disease
+```{r}
+heart_data %>%
+  mutate(any_heart_disease = factor(any_heart_disease, levels = c(0, 1), labels = c("No", "Yes"))) %>%
+  ggplot(aes(x = age, fill = any_heart_disease)) +
+  geom_histogram(binwidth = 1, position = "dodge") +
+  labs(title = "Age Distribution by Heart Disease Status",
+       x = "Age",
+       y = "Count",
+       fill = "Heart Disease")
+```
+
 
 ### view your dataset
 ```{r}

@@ -1,0 +1,15 @@
+Variable Name,Description
+age,Age in years
+sex,Sex (1 = male; 0 = female)
+cp,Chest pain type (4 values)
+trestbps,Resting blood pressure (on admission to the hospital) in mm Hg
+chol,Serum cholesterol in mg/dl
+fbs,Fasting blood sugar > 120 mg/dl (1 = true; 0 = false)
+restecg,"Resting electrocardiographic results (0, 1, 2)"
+thalach,Maximum heart rate achieved
+exang,Exercise-induced angina (1 = yes; 0 = no)
+oldpeak,ST depression induced by exercise relative to rest
+slope,The slope of the peak exercise ST segment
+ca,Number of major vessels colored by fluoroscopy
+thal,Thalassemia (3 = normal; 6 = fixed defect; 7 = reversible defect)
+num,Diagnosis of heart disease (number of vessels with > 50% narrowing on angiogram)
