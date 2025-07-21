@@ -1,1 +1,0 @@
-This folder will contain your data, which should NOT be pushed to github. 
