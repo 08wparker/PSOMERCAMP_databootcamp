@@ -71,7 +71,7 @@ heart_data <- heart_data %>%
 heart_data <- heart_data %>%
   filter(age >= 40 & age <= 70)
 
-write_csv(heart_data, "/Users/williamparker/Desktop/patient_data/heart_data.csv")
+write_csv(heart_data, "data/heart_data.csv")
 ```
 
 ## Primary outcome

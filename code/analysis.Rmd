@@ -1,6 +1,9 @@
 ---
 title: "Analysis of Heart Disease"
-output: html_notebook
+output:
+  html_notebook: default
+  pdf_document: default
+  word_document: default
 ---
 
 # Libraries
@@ -9,18 +12,34 @@ library(tidyverse)
 library(here)
 ```
 
+
+```{r}
+# get current working directory
+getwd()
+
+
+# Set working directory to "/Users/williamparker/Desktop/PSOMERCAMP_databootcamp"
+setwd("/Users/williamparker/Desktop/PSOMERCAMP_databootcamp")
+
+```
+
 # Load Data
 ```{r}
 # Load the pre-processed heart disease dataset
-heart_data <- read_csv("/Users/williamparker/Desktop/patient_data/heart_data.csv")
+heart_data <- read_csv("/Users/williamparker/Desktop/PSOMERCAMP_databootcamp/data/heart_data.csv")
 ```
 
-# Create Outcome Variable
+# Results
 ```{r}
 # construct binary primary outcome of any_heart_disease from num > 0
 heart_data <- heart_data %>%
   mutate(any_heart_disease = ifelse(num > 0, 1, 0))
+
+proportion_heart_disease <- mean(heart_data$any_heart_disease, na.rm = TRUE)
 ```
+
+## Study population
+There are `r nrow(heart_data)` observations in the dataset, with `r sum(heart_data$any_heart_disease)` cases of heart disease. The proportion of individuals with heart disease is `r round(proportion_heart_disease * 100, 2)`%. The mean age is `r round(mean(heart_data$age, na.rm = TRUE), 1)` years, and the mean cholesterol level is `r round(mean(heart_data$chol, na.rm = TRUE), 1)` mg/dl and the proportion of men is `r round(mean(heart_data$sex, na.rm = TRUE) * 100, 1)`%.
 
 # Logistic Regression Model
 This section performs a logistic regression to model the likelihood of heart disease based on age and cholesterol levels.
@@ -35,6 +54,34 @@ logistic_model <- glm(any_heart_disease ~ age + chol,
 
 # Display the summary of the model to see the results
 summary(logistic_model)
+
+# Load required libraries
+library(broom)
+library(dplyr)
+library(flextable)
+library(officer)
+
+
+# Tidy the regression output
+tidy_model <- tidy(logistic_model)
+
+# Optionally round for nicer display
+tidy_model <- tidy_model %>%
+  mutate(across(where(is.numeric), ~ round(., 4)))
+
+# Create a flextable
+ft <- flextable(tidy_model)
+ft <- autofit(ft)
+ft <- set_caption(ft, caption = "Logistic Regression Results")
+
+# Export to Word document
+doc <- read_docx() %>%
+  body_add_par("Logistic Regression Summary", style = "heading 1") %>%
+  body_add_flextable(ft)
+
+# Save the document
+print(doc, target = "logistic_regression_summary.docx")
+
 ```
 
 # Cholesterol vs. Age by Heart Disease Status
