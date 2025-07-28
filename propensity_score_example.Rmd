@@ -1,0 +1,236 @@
+---
+title: "Propensity Score Matching Example"
+author: "Data Analysis"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+#check that packages are installed, if not install them
+if (!requireNamespace("MatchIt", quietly = TRUE)) {
+  install.packages("MatchIt")
+}
+
+# check if cobalt is installed
+if (!requireNamespace("cobalt", quietly = TRUE)) {
+  install.packages("cobalt")
+}
+
+
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+library(MatchIt)
+library(ggplot2)
+library(dplyr)
+library(gridExtra)
+library(cobalt)
+
+
+```
+
+## Introduction
+
+This example demonstrates propensity score matching using simulated data. We'll show histograms of covariate distributions before and after matching to assess balance improvement.
+
+## Generate Sample Data
+
+```{r generate_data}
+set.seed(123)
+n <- 1000
+
+# Generate covariates
+age <- rnorm(n, 50, 15)
+income <- rnorm(n, 40000, 15000)
+education <- sample(1:5, n, replace = TRUE)
+health_score <- rnorm(n, 70, 20)
+
+# Generate treatment assignment (with selection bias)
+treatment_prob <- plogis(-2 + 0.02*age + 0.00003*income + 0.3*education + 0.01*health_score)
+treatment <- rbinom(n, 1, treatment_prob)
+
+# Generate outcome with treatment effect
+outcome <- 10 + 2*treatment + 0.1*age + 0.0001*income + 1.5*education + 0.05*health_score + rnorm(n, 0, 5)
+
+# Create dataset
+data <- data.frame(
+  treatment = treatment,
+  age = age,
+  income = income,
+  education = education,
+  health_score = health_score,
+  outcome = outcome
+)
+
+print(paste("Treatment group size:", sum(data$treatment)))
+print(paste("Control group size:", sum(1-data$treatment)))
+```
+
+## Pre-matching Analysis
+
+```{r pre_matching_balance}
+# Check balance before matching
+bal_before <- bal.tab(treatment ~ age + income + education + health_score, 
+                      data = data, estimand = "ATT")
+print("Balance before matching:")
+print(bal_before)
+```
+
+## Histograms Before Matching
+
+```{r histograms_before, fig.width=12, fig.height=8}
+# Create histograms for each covariate before matching
+p1_before <- ggplot(data, aes(x = age, fill = factor(treatment))) +
+  geom_histogram(alpha = 0.7, position = "identity", bins = 30) +
+  scale_fill_manual(values = c("0" = "red", "1" = "blue"), 
+                    labels = c("Control", "Treatment")) +
+  labs(title = "Age Distribution Before Matching", x = "Age", y = "Count", fill = "Group") +
+  theme_minimal()
+
+p2_before <- ggplot(data, aes(x = income, fill = factor(treatment))) +
+  geom_histogram(alpha = 0.7, position = "identity", bins = 30) +
+  scale_fill_manual(values = c("0" = "red", "1" = "blue"), 
+                    labels = c("Control", "Treatment")) +
+  labs(title = "Income Distribution Before Matching", x = "Income", y = "Count", fill = "Group") +
+  theme_minimal()
+
+p3_before <- ggplot(data, aes(x = education, fill = factor(treatment))) +
+  geom_histogram(alpha = 0.7, position = "identity", bins = 5) +
+  scale_fill_manual(values = c("0" = "red", "1" = "blue"), 
+                    labels = c("Control", "Treatment")) +
+  labs(title = "Education Distribution Before Matching", x = "Education Level", y = "Count", fill = "Group") +
+  theme_minimal()
+
+p4_before <- ggplot(data, aes(x = health_score, fill = factor(treatment))) +
+  geom_histogram(alpha = 0.7, position = "identity", bins = 30) +
+  scale_fill_manual(values = c("0" = "red", "1" = "blue"), 
+                    labels = c("Control", "Treatment")) +
+  labs(title = "Health Score Distribution Before Matching", x = "Health Score", y = "Count", fill = "Group") +
+  theme_minimal()
+
+grid.arrange(p1_before, p2_before, p3_before, p4_before, ncol = 2)
+```
+
+## Propensity Score Matching
+
+```{r matching}
+# Perform propensity score matching
+match_out <- matchit(treatment ~ age + income + education + health_score,
+                     data = data,
+                     method = "nearest",
+                     distance = "glm",
+                     caliper = 0.1)
+
+# Summary of matching
+summary(match_out)
+
+# Extract matched data
+matched_data <- match.data(match_out)
+```
+
+## Post-matching Balance
+
+```{r post_matching_balance}
+# Check balance after matching
+bal_after <- bal.tab(match_out, estimand = "ATT")
+print("Balance after matching:")
+print(bal_after)
+```
+
+## Histograms After Matching
+
+```{r histograms_after, fig.width=12, fig.height=8}
+# Create histograms for each covariate after matching
+p1_after <- ggplot(matched_data, aes(x = age, fill = factor(treatment))) +
+  geom_histogram(alpha = 0.7, position = "identity", bins = 30) +
+  scale_fill_manual(values = c("0" = "red", "1" = "blue"), 
+                    labels = c("Control", "Treatment")) +
+  labs(title = "Age Distribution After Matching", x = "Age", y = "Count", fill = "Group") +
+  theme_minimal()
+
+p2_after <- ggplot(matched_data, aes(x = income, fill = factor(treatment))) +
+  geom_histogram(alpha = 0.7, position = "identity", bins = 30) +
+  scale_fill_manual(values = c("0" = "red", "1" = "blue"), 
+                    labels = c("Control", "Treatment")) +
+  labs(title = "Income Distribution After Matching", x = "Income", y = "Count", fill = "Group") +
+  theme_minimal()
+
+p3_after <- ggplot(matched_data, aes(x = education, fill = factor(treatment))) +
+  geom_histogram(alpha = 0.7, position = "identity", bins = 5) +
+  scale_fill_manual(values = c("0" = "red", "1" = "blue"), 
+                    labels = c("Control", "Treatment")) +
+  labs(title = "Education Distribution After Matching", x = "Education Level", y = "Count", fill = "Group") +
+  theme_minimal()
+
+p4_after <- ggplot(matched_data, aes(x = health_score, fill = factor(treatment))) +
+  geom_histogram(alpha = 0.7, position = "identity", bins = 30) +
+  scale_fill_manual(values = c("0" = "red", "1" = "blue"), 
+                    labels = c("Control", "Treatment")) +
+  labs(title = "Health Score Distribution After Matching", x = "Health Score", y = "Count", fill = "Group") +
+  theme_minimal()
+
+grid.arrange(p1_after, p2_after, p3_after, p4_after, ncol = 2)
+```
+
+## Before vs After Comparison
+
+```{r comparison_plots, fig.width=15, fig.height=10}
+# Side-by-side comparison for age
+grid.arrange(p1_before, p1_after, 
+             p2_before, p2_after,
+             p3_before, p3_after,
+             p4_before, p4_after,
+             ncol = 2,
+             top = "Covariate Distributions: Before (Left) vs After (Right) Matching")
+```
+
+## Treatment Effect Estimation
+
+```{r treatment_effect}
+# Estimate treatment effect before matching
+effect_before <- lm(outcome ~ treatment + age + income + education + health_score, data = data)
+print("Treatment effect before matching:")
+summary(effect_before)$coefficients[2, ]
+
+# Estimate treatment effect after matching
+effect_after <- lm(outcome ~ treatment + age + income + education + health_score, 
+                   data = matched_data, weights = matched_data$weights)
+print("Treatment effect after matching:")
+summary(effect_after)$coefficients[2, ]
+
+# Simple difference in means after matching
+mean_diff <- with(matched_data, mean(outcome[treatment == 1]) - mean(outcome[treatment == 0]))
+print(paste("Simple mean difference after matching:", round(mean_diff, 3)))
+```
+
+## Propensity Score Distribution
+
+```{r propensity_scores, fig.width=10, fig.height=6}
+# Plot propensity score distributions
+data$prop_score <- match_out$distance
+matched_data$prop_score <- matched_data$distance
+
+p_prop_before <- ggplot(data, aes(x = prop_score, fill = factor(treatment))) +
+  geom_histogram(alpha = 0.3, position = "identity", bins = 30) +
+  scale_fill_manual(values = c("0" = "red", "1" = "blue"), 
+                    labels = c("Control", "Treatment")) +
+  labs(title = "Propensity Score Before Matching", x = "Propensity Score", y = "Count", fill = "Group") +
+  theme_minimal()
+
+p_prop_after <- ggplot(matched_data, aes(x = prop_score, fill = factor(treatment))) +
+  geom_histogram(alpha = 0.3, position = "identity", bins = 30) +
+  scale_fill_manual(values = c("0" = "red", "1" = "blue"), 
+                    labels = c("Control", "Treatment")) +
+  labs(title = "Propensity Score After Matching", x = "Propensity Score", y = "Count", fill = "Group") +
+  theme_minimal()
+
+grid.arrange(p_prop_before, p_prop_after, ncol = 2)
+```
+
+## Conclusion
+
+This example demonstrates how propensity score matching can improve covariate balance between treatment and control groups. The histograms show that after matching:
+
+1. The distributions of covariates between treatment and control groups become more similar
+2. The overlap in propensity scores improves
+3. The standardized mean differences decrease, indicating better balance
+
+The matched dataset provides a more reliable basis for estimating causal treatment effects by reducing selection bias.
